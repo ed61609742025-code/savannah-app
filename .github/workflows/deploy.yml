@@ -35,8 +35,9 @@ jobs:
 
       - name: 🌐 Compile Flutter Web Release
         run: |
-          flutter build web --release --base-href "/savannah-app/"
+          flutter build web --release --base-href "./"
           cp build/web/index.html build/web/404.html
+          cp web/_redirects build/web/_redirects
 
       - name: 📱 Compile Android APK
         run: flutter build apk --debug

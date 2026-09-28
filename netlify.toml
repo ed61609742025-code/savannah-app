@@ -1,0 +1,20 @@
+# Netlify Configuration for Savannah Flutter Web App
+
+[build]
+  publish = "build/web"
+  command = "git clone https://github.com/flutter/flutter.git --depth 1 -b stable _flutter && ./_flutter/bin/flutter build web --release --base-href '/' && cp web/_redirects build/web/_redirects"
+
+[build.environment]
+  FLUTTER_CHANNEL = "stable"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer-when-downgrade"
