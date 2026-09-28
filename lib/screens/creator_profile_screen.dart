@@ -38,7 +38,10 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> with Single
 
     return Scaffold(
       backgroundColor: AppTheme.canvas,
-      body: NestedScrollView(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
@@ -329,13 +332,27 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> with Single
           controller: _tabController,
           children: [
             // Tab 1: Broadcasts
-            ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 32),
-              itemCount: creatorVideos.length,
-              itemBuilder: (context, index) {
-                return VideoCard(video: creatorVideos[index]);
-              },
-            ),
+            MediaQuery.of(context).size.width >= 850
+                ? GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      mainAxisExtent: 475,
+                    ),
+                    itemCount: creatorVideos.length,
+                    itemBuilder: (context, index) {
+                      return VideoCard(video: creatorVideos[index]);
+                    },
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.only(top: 8, bottom: 32),
+                    itemCount: creatorVideos.length,
+                    itemBuilder: (context, index) {
+                      return VideoCard(video: creatorVideos[index]);
+                    },
+                  ),
 
             // Tab 2: Conservation Ledger
             _buildConservationLedgerTab(creator),
@@ -345,7 +362,9 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> with Single
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _statItem(String value, String label) {

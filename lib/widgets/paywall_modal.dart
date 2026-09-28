@@ -39,7 +39,10 @@ class _PaywallModalState extends State<PaywallModal> {
       });
 
       if (success) {
-        Navigator.of(context).pop();
+        appState.setPaywallVideo(null);
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: AppTheme.secondaryEmerald,
@@ -70,44 +73,65 @@ class _PaywallModalState extends State<PaywallModal> {
     final creator = appState.getCreatorById(widget.video.creatorId);
     final price = widget.video.exclusivePrice ?? 4.99;
     final kesPrice = (price * 130).round();
+    final isDesktop = MediaQuery.of(context).size.width >= 850;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: AppTheme.border, width: 1)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Drag Handle
-            Center(
-              child: Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: AppTheme.textSecondary.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(10),
+    final modalContent = Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: isDesktop ? BorderRadius.circular(24) : const BorderRadius.vertical(top: Radius.circular(28)),
+          border: isDesktop
+              ? Border.all(color: AppTheme.primaryAmber.withValues(alpha: 0.5), width: 1.2)
+              : const Border(top: BorderSide(color: AppTheme.border, width: 1)),
+          boxShadow: isDesktop
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.8),
+                    blurRadius: 36,
+                    spreadRadius: 4,
+                  ),
+                ]
+              : null,
+        ),
+        padding: EdgeInsets.fromLTRB(20, isDesktop ? 20 : 12, 20, 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Drag Handle (Mobile only)
+              if (!isDesktop) ...[
+                Center(
+                  child: Container(
+                    width: 48,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: AppTheme.textSecondary.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Modal Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Unlock Cinematic Pass', style: Theme.of(context).textTheme.headlineMedium),
-                IconButton(
-                  icon: const Icon(Icons.close, color: AppTheme.textSecondary),
-                  onPressed: () => Navigator.pop(context),
-                ),
+                const SizedBox(height: 12),
               ],
-            ),
-            const SizedBox(height: 16),
+
+              // Modal Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Unlock Cinematic Pass', style: Theme.of(context).textTheme.headlineMedium),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppTheme.textSecondary),
+                    onPressed: () {
+                      appState.setPaywallVideo(null);
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
             // Event Summary Card
             Container(
@@ -327,7 +351,31 @@ class _PaywallModalState extends State<PaywallModal> {
           ],
         ),
       ),
-    );
+    ),
+  );
+
+    if (isDesktop) {
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => appState.setPaywallVideo(null),
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.75),
+              ),
+            ),
+          ),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 540),
+              child: modalContent,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return modalContent;
   }
 
   Widget _buildPaymentOption({

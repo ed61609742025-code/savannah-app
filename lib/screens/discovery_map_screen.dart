@@ -192,13 +192,21 @@ class _DiscoveryMapScreenState extends State<DiscoveryMapScreen> with SingleTick
             ),
           ),
 
-          // 4. Sliding Park Inspector Card (Bottom)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildParkInspectorCard(context, selectedPark, appState),
-          ),
+          // 4. Park Inspector Card (Floating desktop widget vs sliding mobile sheet)
+          if (MediaQuery.of(context).size.width >= 850)
+            Positioned(
+              right: 24,
+              bottom: 24,
+              width: 480,
+              child: _buildParkInspectorCard(context, selectedPark, appState, isDesktop: true),
+            )
+          else
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _buildParkInspectorCard(context, selectedPark, appState, isDesktop: false),
+            ),
         ],
       ),
     );
@@ -374,20 +382,25 @@ class _DiscoveryMapScreenState extends State<DiscoveryMapScreen> with SingleTick
     );
   }
 
-  // Sliding Bottom Inspector
-  Widget _buildParkInspectorCard(BuildContext context, ParkLocation park, AppState appState) {
+  // Sliding Bottom Inspector / Floating Desktop Widget
+  Widget _buildParkInspectorCard(
+    BuildContext context,
+    ParkLocation park,
+    AppState appState, {
+    bool isDesktop = false,
+  }) {
     final parkVideos = appState.videos.where((v) => v.parkId == park.id).toList();
 
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: isDesktop ? BorderRadius.circular(20) : const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border.all(color: AppTheme.border, width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.7),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
+            color: Colors.black.withValues(alpha: isDesktop ? 0.85 : 0.7),
+            blurRadius: isDesktop ? 30 : 24,
+            offset: Offset(0, isDesktop ? 4 : -4),
           ),
         ],
       ),
@@ -395,18 +408,21 @@ class _DiscoveryMapScreenState extends State<DiscoveryMapScreen> with SingleTick
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 10, bottom: 8),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.border,
-                borderRadius: BorderRadius.circular(2),
+          // Drag handle on mobile only
+          if (!isDesktop)
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 8),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-          ),
+            )
+          else
+            const SizedBox(height: 16),
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

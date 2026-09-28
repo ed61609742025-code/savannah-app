@@ -70,10 +70,16 @@ class _ExclusivesScreenState extends State<ExclusivesScreen> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1440),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width >= 850 ? 24 : 16,
+              vertical: 8,
+            ),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
@@ -225,6 +231,24 @@ class _ExclusivesScreenState extends State<ExclusivesScreen> {
                   ],
                 ),
               )
+            else if (MediaQuery.of(context).size.width >= 850)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: (MediaQuery.of(context).size.width - 250) > 1150 ? 3 : 2,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  mainAxisExtent: 475,
+                ),
+                itemCount: displayVideos.length,
+                itemBuilder: (context, index) {
+                  final video = displayVideos[index];
+                  final isUnlocked = appState.isVideoUnlocked(video.id);
+                  final creator = appState.getCreatorById(video.creatorId);
+                  return _buildExclusiveCard(context, video, creator, isUnlocked, appState, isGrid: true);
+                },
+              )
             else
               ...displayVideos.map((video) {
                 final isUnlocked = appState.isVideoUnlocked(video.id);
@@ -237,7 +261,9 @@ class _ExclusivesScreenState extends State<ExclusivesScreen> {
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _splitMetric({
@@ -266,13 +292,14 @@ class _ExclusivesScreenState extends State<ExclusivesScreen> {
     WildlifeVideo video,
     Creator? creator,
     bool isUnlocked,
-    AppState appState,
-  ) {
+    AppState appState, {
+    bool isGrid = false,
+  }) {
     final price = video.exclusivePrice ?? 4.99;
     final rangerShare = (price * 0.70).toStringAsFixed(2);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: isGrid ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(14),

@@ -78,33 +78,84 @@ class _CreatorStudioScreenState extends State<CreatorStudioScreen> with SingleTi
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Live Broadcast Viewfinder Simulation HUD
-            _buildViewfinderHUD(),
-            const SizedBox(height: 16),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 960;
 
-            // 2. Ingest Stream Credentials (RTMP / SRT)
-            _buildIngestCredentialsCard(),
-            const SizedBox(height: 16),
+          if (isDesktop) {
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1440),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.all(24),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left Side: Live Broadcast Viewfinder & RTMP Ingest Credentials
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildViewfinderHUD(),
+                            const SizedBox(height: 20),
+                            _buildIngestCredentialsCard(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 24),
 
-            // 3. Real-time Livestream Telemetry & Analytics
-            _buildAnalyticsRow(),
-            const SizedBox(height: 16),
+                      // Right Side: Telemetry, M-Pesa Cashout & Payout Ledger
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildAnalyticsRow(),
+                            const SizedBox(height: 20),
+                            _buildMpesaEarningsCard(),
+                            const SizedBox(height: 20),
+                            _buildPayoutLedger(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
 
-            // 4. Safaricom M-Pesa Cashout & Earnings Card
-            _buildMpesaEarningsCard(),
-            const SizedBox(height: 16),
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Live Broadcast Viewfinder Simulation HUD
+                _buildViewfinderHUD(),
+                const SizedBox(height: 16),
 
-            // 5. Past Payout Ledger
-            _buildPayoutLedger(),
-            const SizedBox(height: 32),
-          ],
-        ),
+                // 2. Ingest Stream Credentials (RTMP / SRT)
+                _buildIngestCredentialsCard(),
+                const SizedBox(height: 16),
+
+                // 3. Real-time Livestream Telemetry & Analytics
+                _buildAnalyticsRow(),
+                const SizedBox(height: 16),
+
+                // 4. Safaricom M-Pesa Cashout & Earnings Card
+                _buildMpesaEarningsCard(),
+                const SizedBox(height: 16),
+
+                // 5. Past Payout Ledger
+                _buildPayoutLedger(),
+                const SizedBox(height: 32),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

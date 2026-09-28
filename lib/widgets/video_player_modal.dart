@@ -36,164 +36,161 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> with SingleTickerPr
     final appState = Provider.of<AppState>(context);
     final creator = appState.getCreatorById(widget.video.creatorId);
     final park = appState.getParkById(widget.video.parkId);
+    final isDesktop = MediaQuery.of(context).size.width >= 960;
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: AppTheme.canvas,
+        appBar: AppBar(
+          backgroundColor: AppTheme.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            tooltip: 'Back to Feeds',
+            onPressed: () => appState.setActiveVideo(null),
+          ),
+          title: Row(
+            children: [
+              if (widget.video.isLive) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppTheme.liveCrimson,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.fiber_manual_record, color: Colors.white, size: 8),
+                      SizedBox(width: 4),
+                      Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: Text(
+                  widget.video.title,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.visibility, size: 14, color: AppTheme.textSecondary),
+                  const SizedBox(width: 5),
+                  Text('${widget.video.views} watching', style: const TextStyle(fontSize: 11, color: Colors.white)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+        ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1600),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left (Theatre Player & Information): flex 7
+                  Expanded(
+                    flex: 7,
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: AspectRatio(
+                              aspectRatio: 16 / 9,
+                              child: _buildVideoViewport(context, appState, creator, park, isDesktop: true),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTitleAndCreatorRow(context, appState, creator),
+                          const SizedBox(height: 16),
+                          _buildSpeciesTab(context, widget.video, park),
+                          const SizedBox(height: 16),
+                          _buildTelemetryTab(context, widget.video),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  // Right (Dedicated Live Chat & Interaction Column): flex 3
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      height: MediaQuery.of(context).size.height - 120,
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.border),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: const BoxDecoration(
+                              color: AppTheme.surfaceContainer,
+                              border: Border(bottom: BorderSide(color: AppTheme.border)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.chat_bubble_outline_rounded, color: AppTheme.primaryAmber, size: 18),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Live Field Chat & Log',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(color: AppTheme.secondaryEmerald, shape: BoxShape.circle),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildChatTab(context, appState),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.canvas,
       body: SafeArea(
         child: Column(
           children: [
-            // Top Video Viewport Container
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: LiveStreamPlayer(
-                    videoUrl: widget.video.videoUrl,
-                    title: widget.video.title,
-                    cameraRig: widget.video.cameraRig,
-                    sensorMode: widget.video.sensorMode,
-                    isMuted: false,
-                    autoPlay: true,
-                    showControls: false,
-                  ),
-                ),
-
-                // Top Controls Bar (Close, Live count, Cast)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  right: 8,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 28),
-                        onPressed: () => appState.setActiveVideo(null),
-                      ),
-                      const SizedBox(width: 4),
-                      if (widget.video.isLive)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppTheme.liveCrimson,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: const [
-                              Icon(Icons.fiber_manual_record, color: Colors.white, size: 8),
-                              SizedBox(width: 4),
-                              Text(
-                                'LIVE',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${widget.video.views} watching',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.cast, color: Colors.white, size: 20),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.white, size: 20),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Bottom Video HUD telemetry
-                Positioned(
-                  bottom: 8,
-                  left: 12,
-                  right: 12,
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface.withValues(alpha: 0.85),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppTheme.border, width: 0.5),
-                        ),
-                        child: Text(
-                          widget.video.cameraRig ?? 'CAM-01 [WIDE]',
-                          style: const TextStyle(
-                            color: AppTheme.secondaryEmeraldLight,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        park != null ? park.name : 'African Wildlife Reserve',
-                        style: const TextStyle(color: Colors.white70, fontSize: 11),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        icon: const Icon(Icons.fullscreen, color: Colors.white, size: 22),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: _buildVideoViewport(context, appState, creator, park, isDesktop: false),
             ),
-
-            // Video Title & Creator Row
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.video.title,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        if (creator != null)
-                          Text(
-                            'Hosted by ${creator.name} • ${creator.role}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
-                    ),
-                  ),
-                  // Quick Tip Button
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryAmber,
-                      foregroundColor: AppTheme.canvas,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      minimumSize: Size.zero,
-                    ),
-                    icon: const Icon(Icons.monetization_on, size: 16),
-                    label: const Text('Tip', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    onPressed: () => _showTipSheet(context, appState, creator),
-                  ),
-                ],
-              ),
-            ),
-
-            // Tabs Bar: Chat, Species Intel, Field Audio
+            _buildTitleAndCreatorRow(context, appState, creator),
             TabBar(
               controller: _tabController,
               indicatorColor: AppTheme.primaryAmber,
@@ -206,25 +203,170 @@ class _VideoPlayerModalState extends State<VideoPlayerModal> with SingleTickerPr
                 Tab(text: 'Audio & Telemetry'),
               ],
             ),
-
-            // Tab View Body
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  // Tab 1: Live Chat
                   _buildChatTab(context, appState),
-
-                  // Tab 2: Species Intel
                   _buildSpeciesTab(context, widget.video, park),
-
-                  // Tab 3: Telemetry
                   _buildTelemetryTab(context, widget.video),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildVideoViewport(
+    BuildContext context,
+    AppState appState,
+    Creator? creator,
+    ParkLocation? park, {
+    required bool isDesktop,
+  }) {
+    return Stack(
+      children: [
+        LiveStreamPlayer(
+          videoUrl: widget.video.videoUrl,
+          title: widget.video.title,
+          cameraRig: widget.video.cameraRig,
+          sensorMode: widget.video.sensorMode,
+          isMuted: false,
+          autoPlay: true,
+          showControls: false,
+        ),
+        if (!isDesktop)
+          Positioned(
+            top: 8,
+            left: 8,
+            right: 8,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 28),
+                  onPressed: () => appState.setActiveVideo(null),
+                ),
+                const SizedBox(width: 4),
+                if (widget.video.isLive)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.liveCrimson,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.fiber_manual_record, color: Colors.white, size: 8),
+                        SizedBox(width: 4),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Text(
+                  '${widget.video.views} watching',
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.cast, color: Colors.white, size: 20),
+                  onPressed: () {},
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings, color: Colors.white, size: 20),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
+        Positioned(
+          bottom: 8,
+          left: 12,
+          right: 12,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: AppTheme.border, width: 0.5),
+                ),
+                child: Text(
+                  widget.video.cameraRig ?? 'CAM-01 [WIDE]',
+                  style: const TextStyle(
+                    color: AppTheme.secondaryEmeraldLight,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                park != null ? park.name : 'African Wildlife Reserve',
+                style: const TextStyle(color: Colors.white70, fontSize: 11),
+              ),
+              const Spacer(),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(Icons.fullscreen, color: Colors.white, size: 22),
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTitleAndCreatorRow(BuildContext context, AppState appState, Creator? creator) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.video.title,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                if (creator != null)
+                  Text(
+                    'Hosted by ${creator.name} • ${creator.role}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryAmber,
+              foregroundColor: AppTheme.canvas,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              minimumSize: Size.zero,
+            ),
+            icon: const Icon(Icons.monetization_on, size: 16),
+            label: const Text('Tip Ranger', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            onPressed: () => _showTipSheet(context, appState, creator),
+          ),
+        ],
       ),
     );
   }
